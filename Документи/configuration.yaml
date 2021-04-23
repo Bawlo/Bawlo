@@ -1,0 +1,155 @@
+
+# https://www.home-assistant.io/docs/configuration/basic/
+homeassistant:
+  name: My Smart Home
+  latitude: !secret latitude_coord
+  longitude: !secret longitude_coord
+  elevation: 179
+  unit_system: metric
+  time_zone: Europe/Kiev
+
+  ### The following installs all package files
+  packages: !include_dir_named packages
+  # Там маємо sensors.yaml
+
+
+  ### The following installs all customizions 
+  customize: !include customize.yaml
+  customize_glob: !include customize_glob.yaml
+  auth_providers:
+    - type: homeassistant
+    - type: trusted_networks
+      trusted_networks:
+        - 192.168.1.0/24
+     # trusted_users:
+     #   192.168.1.24: 4cd6c52e90d84b0a96bda6f9c4b648c4  # User ID 
+
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+lovelace:
+#  mode: yaml
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+
+group: !include groups.yaml
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+#Вынос во внешние папки
+sensor: !include includes/sensors.yaml #!include_dir_merge_list includes/sensor
+binary_sensor: !include includes/binary_sensors.yaml
+
+telegram_bot: #MyNamedBot
+  - platform: polling
+    api_key: !secret telegram_token
+    parse_mode: html
+    allowed_chat_ids:
+      - nummer
+
+notify:
+  - name: me
+    platform: telegram
+    chat_id: nummer
+
+# Вынесем настройки в отдельный файл. Часть configuration.yaml
+# fan: !include packages/fans.yaml #WAS includes/fans.yaml 
+
+## Задаем метрическую или имперскую систему исчисления.
+#  unit_system: metric
+#  # Задаем часовой пояс для корректного отображения времени, берем тут: http://en.wikiped>
+#  time_zone: Europe/Kiev
+#  # Файл для красивостей, рассмотрим в следующих статьях
+#  customize: !include customize.yaml
+
+## Если не хотите видеть приветственное сообщение в панели управления, надо поставить зн>
+##introduction:
+
+## Компонент, позволяющий в автоматическом режиме находить ваши устройства в сети. Хорошо >
+discovery:
+
+xiaomi_aqara:
+  discovery_retry: 5
+  gateways:
+    - mac: !secret xiaomimac
+      key: !secret xiaomikey
+      host: 192.168.1.77
+
+device_tracker:
+  - platform: ping
+    scan_interval: 30
+    count: 3
+    consider_home: 90
+    hosts:
+      ping_lentab: !secret lentab_ip
+      ping_pa: !secret pa_ip
+      ping_ir: !secret ir_ip
+
+mqtt:
+#  certificate: "PATH_TO_CA.crt"
+  broker: core-mosquitto  # Локальный брокер #127.0.0.1 #192.168.1.61
+  port: 1883
+  #client_id: home-assistant-1
+  keepalive: 60
+  username: !secret mqtt_login
+  password: !secret mqtt_password
+  discovery: true
+  discovery_prefix: homeassistant
+  #protocol: 3.1
+  #birth_message:
+#    topic: "tele/hass1/LWT"
+#    payload: "Online"
+#    qos: 1
+#    retain: true
+  #will_message:
+#    topic: "tele/hass1/LWT"
+#    payload: "Offline"
+#    qos: 1
+#    retain: true
+logger:
+  default: warning
+  logs:
+    homeassistant.components.mqtt: debug
+
+#sensor:
+#binary_sensor:
+#  - platform: ping
+#    host: 192.168.1.97
+#    name: pa_phone
+#    count: 5
+#    scan_interval: 60
+#
+#  - platform: ping
+#    host: google.com
+#    count: 2
+#    scan_interval: 60
+#    name: google_is_available
+#  - platform: ping
+#    host: i.ua
+#    count: 2
+#    scan_interval: 60
+#    name: iua_is_available
+#  - platform: template
+#    sensors:
+#      internet_is_available:
+#        value_template: "{{ states('binary_sensor.google_is_available') == 'on' or states('binary_sensor.iua_is_available') == 'on' }}"
+#        device_class: connectivity
+#      smart_pa_is_available:
+#        value_template: "{ states('pa_phone') == 'on' }"
+#        device_class: connectivity
+
+# Moved to includes/fans.yaml:
+# https://smartme.pl/en/xiaomi-mi-air-purifier-3h-finally-at-home-assistant/
+#fan: 
+#  - platform: xiaomi_miio
+#    name: Air Purifier Bedroom #Ence will be called: fan.air_purifier_bedroom
+#    host: 192.168.1.78 # purifier_ip_address
+#    token: ------------ # purifier_token
+#    model: zhimi.airpurifier.mb3 # Optional, but worth adding. #For 3H: zhimi.airpurifier.mb3 #For 3: zhimi.airpurifier.ma4
+
+# Example configuration.yaml entry
+#sensor:
